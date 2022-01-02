@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.CategoryMapper">
+
+    <select id="selectPopularCategories" resultType="java.lang.String">
+        select article_category, count(*) as counts
+        from article
+        group by article_category
+        order by counts desc
+        limit 5
+    </select>
+
+    <!--TODO-->
+    <select id="selectCategoryArticle" resultType="CategoryArticle">
+        select *
+        from article
+    </select>
+
+    <select id="selectCategoryArticleByUserId" resultMap="articleCategory">
+        SELECT article.article_id,
+               star.star_category,
+               article.article_title,
+               article.article_content,
+               article.article_summary,
+               t.`tag_id`,
+               t.`tag_name`,
+               u.user_nickname,
+               u.user_avatar
+        FROM star
+                 LEFT JOIN article ON star.article_id = article.article_id
+                 LEFT JOIN article_tag_ref atr ON article.article_id = atr.article_id
+                 LEFT JOIN tag t ON atr.tag_id = t.tag_id
+                 left join user u on star.user_id = u.user_id
+        WHERE star.user_id = #{userId}
+          AND article.article_id IS NOT NULL
+    </select>
+
+    <resultMap id="articleCategory" type="CategoryArticle">
+        <id property="articleCategory" column="star_category"/>
+        <collection property="articleCategoryList" ofType="Article" javaType="java.util.List">
+            <id property="articleId" column="article_id"/>
+            <result property="articleTitle" column="article_title"/>
+            <!--<result property="articleCreateTime" column="article_create_time"/>-->
+            <result property="articleSummary" column="article_summary"/>
+            <!--<result property="articleCategory" column="article_category"/>-->
+            <result property="userAvatar" column="user_avatar"/>
+            <result property="userNickname" column="user_nickname"/>
+
+            <collection property="articleTags" ofType="Tag" javaType="java.util.List">
+                <result property="tagName" column="tag_name"/>
+            </collection>
+        </collection>
+    </resultMap>
+
+</mapper>

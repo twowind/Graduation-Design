@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.MessageMapper">
+
+    <insert id="insertMessage" parameterType="Message">
+        insert into message(messager_id, messaged_id, message_content, message_time)
+            VALUE (#{messagerId}, #{messagedId}, #{messageContent}, #{messageTime})
+    </insert>
+
+    <select id="selectMessage" resultType="Message">
+        select message_id, messager_id, messaged_id, message_content, message_time
+        from message
+        <where>
+            <if test="messageId!=null">
+                and message_id=#{messageId}
+            </if>
+            <if test="messagerId!=null">
+                and messager_id=#{messagerId}
+            </if>
+            <if test="messagedId!=null">
+                and messaged_id =#{messagedId}
+            </if>
+            <if test="messageContent!=null">
+                and message_content like '%${messageContent}%'
+            </if>
+            <if test="messageTime!=null">
+                and date_format(message_time,'%Y-%m-%d')=date_format(#{messageTime},'%Y-%m-%d')
+            </if>
+        </where>
+
+        <if test="sort!=null">
+            <foreach collection="sort" item="item" index="index">
+                <choose>
+                    <when test="index=='messageId'">
+                        <if test="item=='descend'">
+                            order by message_id desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by message_id asc
+                        </if>
+                    </when>
+                    <when test="index=='messagerId'">
+                        <if test="item=='descend'">
+                            order by messager_id desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by messager_id asc
+                        </if>
+                    </when>
+                    <when test="index=='messagedId'">
+                        <if test="item=='descend'">
+                            order by messaged_id desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by messaged_id asc
+                        </if>
+                    </when>
+                    <when test="index=='messageTime'">
+                        <if test="item=='descend'">
+                            order by message_time desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by message_time asc
+                        </if>
+                    </when>
+                    <otherwise>
+                        order by message_id asc
+                    </otherwise>
+                </choose>
+            </foreach>
+        </if>
+    </select>
+
+    <delete id="deleteMessage">
+        delete
+        from message
+        where message_id = #{messageId}
+    </delete>
+
+</mapper>

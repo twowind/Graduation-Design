@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.ArticleMapper">
+
+    <insert id="insertArticles" parameterType="Article">
+        insert into article(article_user_id, article_title, article_content, article_create_time,
+                            article_update_time, article_summary, article_category, article_read_count)
+        VALUES (#{articleUserId}, #{articleTitle}, #{articleContent}, #{articleCreateTime}, #{articleUpdateTime},
+                #{articleSummary}, #{articleCategory}, #{articleReadCount})
+
+    </insert>
+
+    <!--<select id="selectArticle" parameterType="ArticleParam" resultMap="userArticle">-->
+    <!--    select A.article_id,-->
+    <!--    article_update_time,-->
+    <!--    article_content,-->
+    <!--    article_user_id,-->
+    <!--    article_title,-->
+    <!--    article_read_count,-->
+    <!--    article_summary,-->
+    <!--    article_category,-->
+    <!--    article_create_time,-->
+    <!--    tag_name-->
+    <!--    from article as A-->
+    <!--    left join article_tag_ref-->
+    <!--    on A.article_id = article_tag_ref.article_id-->
+    <!--    left join tag-->
+    <!--    on article_tag_ref.tag_id = tag.tag_id-->
+    <!--    where A.`article_id` in (-->
+    <!--    select c.article_id-->
+    <!--    from (select B.article_id-->
+    <!--    from article as B-->
+    <!--    <where>-->
+    <!--        <if test="articleId!=null">-->
+    <!--            and article_id=#{articleId}-->
+    <!--        </if>-->
+    <!--        <if test="articleUserId!=null">-->
+    <!--            and article_user_id=#{articleUserId}-->
+    <!--        </if>-->
+    <!--        <if test="articleTitle!=null">-->
+    <!--            and article_title like '%${articleTitle}%'-->
+    <!--        </if>-->
+    <!--        <if test="articleCategory!=null">-->
+    <!--            and article_category like '%${articleCategory}%'-->
+    <!--        </if>-->
+    <!--        <if test="articleSummary!=null">-->
+    <!--            and article_summary like '%${articleSummary}%'-->
+    <!--        </if>-->
+    <!--        <if test="articleContent!=null">-->
+    <!--            and article_content like '%${articleContent}%'-->
+    <!--        </if>-->
+    <!--        <if test="articleCreateTime!=null">-->
+    <!--            and date_format(article_create_time,'%Y-%m-%d')=date_format(#{articleCreateTime},'%Y-%m-%d')-->
+    <!--        </if>-->
+    <!--        <if test="articleUpdateTime!=null">-->
+    <!--            and date_format(article_update_time,'%Y-%m-%d')=date_format(#{articleUpdateTime},'%Y-%m-%d')-->
+    <!--        </if>-->
+    <!--        <if test="sort!=null">-->
+    <!--            <foreach collection="sort" item="item" index="index">-->
+    <!--                <if test="item=='descend'">-->
+    <!--                    order by #{index} desc-->
+    <!--                </if>-->
+    <!--                <if test="item=='ascend'">-->
+    <!--                    order by #{index}-->
+    <!--                </if>-->
+    <!--            </foreach>-->
+    <!--        </if>-->
+
+    <!--    </where>-->
+    <!--    ) as c)-->
+
+    <!--</select>-->
+
+    <select id="selectArticle" parameterType="ArticleParam" resultMap="ArticleMap">
+        select C.article_id,
+        C.article_user_id,
+        C.article_title,
+        C.article_content,
+        C.article_create_time,
+        C.article_update_time,
+        C.article_summary,
+        C.article_category,
+        C.article_read_count
+        from article as C
+        <where>
+            C.article_id in (
+            select
+            B.article_id
+            from
+            article as B
+            left join article_tag_ref
+            on B.article_id = article_tag_ref.article_id
+            left join tag
+            on article_tag_ref.tag_id = tag.tag_id
+            <where>
+                <if test="articleTags!=null">
+                    and tag.tag_name in
+                    <foreach collection="articleTags" item="item" open="(" close=")" separator=",">
+                        #{item.tagName,jdbcType=VARCHAR}
+                    </foreach>
+                </if>
+            </where>
+            )
+            <if test="articleId!=null">
+                and article_id=#{articleId}
+            </if>
+            <if test="articleUserId!=null">
+                and article_user_id=#{articleUserId}
+            </if>
+            <if test="articleTitle!=null">
+                and article_title like '%${articleTitle}%'
+            </if>
+            <if test="articleCategory!=null">
+                and article_category like '%${articleCategory}%'
+            </if>
+            <if test="articleSummary!=null">
+                and article_summary like '%${articleSummary}%'
+            </if>
+            <if test="articleContent!=null">
+                and article_content like '%${articleContent}%'
+            </if>
+            <if test="articleCreateTime!=null">
+                and date_format(article_create_time,'%Y-%m-%d')=date_format(#{articleCreateTime},'%Y-%m-%d')
+            </if>
+            <if test="articleUpdateTime!=null">
+                and date_format(article_update_time,'%Y-%m-%d')=date_format(#{articleUpdateTime},'%Y-%m-%d')
+            </if>
+            <if test="sort!=null">
+                <foreach collection="sort" item="item" index="index">
+                    <choose>
+                        <when test="index=='articleId'">
+                            <if test="item=='descend'">
+                                order by article_id desc
+                            </if>
+                            <if test="item=='ascend'">
+                                order by article_id asc
+                            </if>
+                        </when>
+                        <when test="index=='articleCreateTime'">
+                            <if test="item=='descend'">
+                                order by article_create_time desc
+                            </if>
+                            <if test="item=='ascend'">
+                                order by article_create_time asc
+                            </if>
+                        </when>
+                        <when test="index=='articleUpdateTime'">
+                            <if test="item=='descend'">
+                                order by article_update_time desc
+                            </if>
+                            <if test="item=='ascend'">
+                                order by article_update_time asc
+                            </if>
+                        </when>
+                        <when test="index=='articleReadCount'">
+                            <if test="item=='descend'">
+                                order by article_read_count desc
+                            </if>
+                            <if test="item=='ascend'">
+                                order by article_read_count asc
+                            </if>
+                        </when>
+                        <when test="index=='articleUserId'">
+                            <if test="item=='descend'">
+                                order by article_user_id desc
+                            </if>
+                            <if test="item=='ascend'">
+                                order by article_user_id asc
+                            </if>
+                        </when>
+                        <otherwise>
+                            order by article_id
+                        </otherwise>
+                    </choose>
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="ArticleMap" type="Article">
+        <id property="articleId" column="article_id"/>
+        <result property="articleUserId" column="article_user_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleContent" column="article_content"/>
+        <result property="articleCreateTime" column="article_create_time"/>
+        <result property="articleUpdateTime" column="article_update_time"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCategory" column="article_category"/>
+        <result property="articleReadCount" column="article_read_count"/>
+        <collection property="articleTags" ofType="Tag" javaType="ArrayList" select="selectTags" column="article_id"/>
+    </resultMap>
+
+    <select id="selectTags" resultType="Tag">
+        select *
+        from tag
+                 left join article_tag_ref on tag.tag_id = article_tag_ref.tag_id
+        where article_id = #{articleId}
+    </select>
+
+    <resultMap id="userArticle" type="Article">
+        <id property="articleId" column="article_id"/>
+        <result property="articleUserId" column="article_user_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleCreateTime" column="article_create_time"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCategory" column="article_category"/>
+        <!--<result property="userAvatar" column="user_avatar"/>-->
+        <!--<result property="userNickname" column="user_nickname"/>-->
+        <result property="articleContent" column="article_content"/>
+        <!--<result property="username" column="user_name"/>-->
+        <result property="articleUpdateTime" column="article_create_time"/>
+        <result property="articleReadCount" column="article_read_count"/>
+
+        <collection property="articleTags" ofType="Tag" javaType="java.util.List">
+            <result property="tagName" column="tag_name"/>
+        </collection>
+    </resultMap>
+
+    <delete id="deleteArticle" parameterType="int">
+        delete
+        from article
+        where article_id = #{articleId}
+    </delete>
+
+    <update id="editArticle" parameterType="Article">
+        UPDATE article
+        SET article_title=#{articleTitle},
+            article_category=#{articleCategory},
+            article_content=#{ articleContent},
+            article_summary=#{articleSummary}
+        WHERE article_id = #{articleId}
+    </update>
+
+</mapper>

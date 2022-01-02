@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.TagMapper">
+    <insert id="insertTag">
+        insert into tag(tag_name) value (#{tag});
+    </insert>
+
+    <insert id="insertTagRef" parameterType="ArticleTagRef">
+        insert into article_tag_ref(article_id, tag_id) VALUE (#{articleId},#{taId})
+    </insert>
+
+    <select id="selectAllTags" resultType="Tag">
+        select tag_name, atr.tag_id, count(*) as counts
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+        group by atr.tag_id
+        having atr.tag_id is not null
+        order by counts desc
+    </select>
+
+    <select id="selectTagIdByTagName" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select tag_id from `wind-log`.tag where tag_name=#{tagName}
+    </select>
+</mapper>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.StarMapper">
+    <insert id="insertStar" parameterType="Star">
+        insert ignore into star(article_id, user_id, star_category) value (#{articleId},#{userId},#{starCategory})
+    </insert>
+
+</mapper>

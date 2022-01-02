@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.StarMapper">
+    <insert id="insertStar" parameterType="Star">
+        insert ignore into star(article_id, user_id, star_category) value (#{articleId},#{userId},#{starCategory})
+    </insert>
+
+    <select id="selectStarCategoryByUserId" resultType="string">
+        select distinct star_category from star where user_id=#{userId} and star_category!='默认收藏单'
+    </select>
+
+    <select id="selectStarArticle" resultType="Star">
+        select star_id, article_id, user_id, star_category from star where user_id=#{userId} and article_id=#{articleId}
+    </select>
+
+    <delete id="deleteStar" parameterType="Star">
+        delete from star where user_id=#{userId} and article_id=#{articleId}
+    </delete>
+
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.UserMapper">
+    <insert id="insertUser" parameterType="User">
+        insert into user(user_name, user_pass, user_nickname, user_email, user_avatar, user_register_time,
+                         user_bio, user_github, user_location, user_weibo)
+        VALUES (#{userName}, #{userPass}, #{userNickname}, #{userEmail}, #{userAvatar}, #{userRegisterTime}, #{userBio},
+                #{userGithub},
+                #{userLocation}, #{userWeibo})
+    </insert>
+
+    <select id="getAllUsers" parameterType="UserParam" resultType="User">
+        select *
+        from user
+        <where>
+            <if test="userId != null">
+                and user_id=#{userId}
+            </if>
+            <if test="userNickname!=null">
+                and user_nickname like '%${userNickname}%'
+            </if>
+            <if test="userName!=null">
+                and user_name like '%${userName}%'
+            </if>
+            <if test="userRegisterTime!=null">
+                and date_format(user_register_time,'%Y-%m-%d')=date_format(#{userRegisterTime},'%Y-%m-%d')
+            </if>
+        </where>
+
+        <if test="sort!=null">
+            <foreach collection="sort" item="item" index="index">
+                <choose>
+                    <when test="index=='userId'">
+                        <if test="item=='descend'">
+                            order by user_id desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by user_id asc
+                        </if>
+                    </when>
+                    <when test="index=='userRegisterTime'">
+                        <if test="item=='descend'">
+                            order by user_register_time desc
+                        </if>
+                        <if test="item=='ascend'">
+                            order by user_register_time asc
+                        </if>
+                    </when>
+                    <otherwise>
+                        order by user_id
+                    </otherwise>
+                </choose>
+            </foreach>
+        </if>
+    </select>
+
+    <update id="editUser" parameterType="User">
+        update user
+        set user_avatar=#{userAvatar},
+            user_bio=#{userBio},
+            user_email=#{userEmail},
+            user_github=#{userGithub},
+            user_location=#{userLocation},
+            user_nickname=#{userNickname},
+            user_pass=#{userPass},
+            user_weibo=#{userWeibo}
+        where (user_id = #{userId})
+    </update>
+
+</mapper>

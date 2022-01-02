@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.ArticleTagRefMapper">
+
+    <insert id="insertArticleTagRef" >
+        insert  into article_tag_ref(article_id, tag_id) values
+        <foreach item="item" collection="list" separator=",">
+            (#{item.articleId},#{item.taId})
+        </foreach>
+    </insert>
+
+    <delete id="deleteArticleTagRefToArticleId">
+        delete from article_tag_ref where article_id=#{articleId}
+    </delete>
+
+</mapper>

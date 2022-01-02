@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.AdminMapper">
+    <select id="selectAdmin" parameterType="Admin" resultType="Admin">
+        select *
+        from admin
+        where admin_name = #{adminName}
+          and admin_pass = #{adminPass}
+    </select>
+
+    <insert id="insertAdmin" parameterType="AdminRegister">
+        insert into admin(admin_name, admin_pass) value (#{adminName}, #{adminPass})
+    </insert>
+
+</mapper>

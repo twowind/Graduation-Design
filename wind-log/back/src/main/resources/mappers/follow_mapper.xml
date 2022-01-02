@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.FollowMapper">
+
+    <select id="selectFollowCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM follow
+        WHERE (follow_id = #{userId})
+    </select>
+
+    <select id="selectFollowedCount" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM follow
+        WHERE (followed_id = #{userId})
+    </select>
+
+    <select id="selectIsFollow" resultType="Follow" parameterType="Follow">
+        select *
+        from follow
+        where follow_id = #{followId}
+          and followed_id = #{followedId}
+    </select>
+
+    <insert id="insertFollow" parameterType="Follow">
+        insert into `wind-log`.follow(`wind-log`.follow.follow_id, `wind-log`.follow.followed_id) value (#{followId}, #{followedId})
+    </insert>
+
+    <delete id="deleteFollow" parameterType="Follow">
+        delete
+        from `wind-log`.follow
+        where `wind-log`.follow.follow_id = #{followId}
+          and `wind-log`.follow.followed_id = #{followedId}
+    </delete>
+
+</mapper>

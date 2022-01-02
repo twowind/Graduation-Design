@@ -1,0 +1,402 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.ArticleMapper">
+
+    <insert id="insertArticle" parameterType="Article" useGeneratedKeys="true" keyProperty="articleId">
+        insert into article(article_user_id, article_title, article_content, article_create_time, article_update_time,
+                            article_summary, article_category) value (#{articleUserId},
+                                                                      #{articleTitle},
+                                                                      #{articleContent},
+                                                                      #{articleCreateTime},
+                                                                      #{articleUpdateTime},
+                                                                      #{articleSummary},
+                                                                      #{articleCategory})
+    </insert>
+
+    <select id="selectArticleByUserIdToCategory" resultMap="articleCategory">
+        select *
+        from article
+        where article_user_id = #{userId}
+    </select>
+
+    <resultMap id="articleCategory" type="Category">
+        <id property="articleCategory" column="article_category"/>
+        <collection property="articleCategoryList" ofType="ArticleCategory" javaType="java.util.List">
+            <result property="articleId" column="article_id"/>
+            <result property="articleTitle" column="article_title"/>
+            <result property="articleContent" column="article_content"/>
+            <result property="articleSummary" column="article_summary"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectAllArticleToUser" resultMap="userArticle">
+        select *,
+               tag_name,
+               user_avatar,
+               user_nickname,
+               user_name
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+                 LEFT JOIN USER
+                           ON user_id = article_user_id
+        where article_user_id = #{userId}
+    </select>
+
+    <resultMap id="articleTags" type="Article">
+        <id property="articleId" column="article_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleCreateTime" column="article_create_time"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCategory" column="article_category"/>
+
+        <collection property="articleTags" ofType="Tag" javaType="java.util.List">
+            <result property="tagName" column="tag_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectPopularArticles" resultMap="userArticle">
+        select hot_table.article_id,
+               hot_table.article_user_id,
+               hot_table.article_title,
+               hot_table.article_content,
+               hot_table.article_create_time,
+               hot_table.article_update_time,
+               hot_table.article_summary,
+               hot_table.article_category,
+               tag.tag_name,
+               user.user_avatar,
+               user.user_nickname,
+               user.user_name,
+               hot_table.hot
+        from (
+                 select star_count_table.article_id,
+                        star_count_table.article_user_id,
+                        star_count_table.article_title,
+                        star_count_table.article_content,
+                        star_count_table.article_create_time,
+                        star_count_table.article_update_time,
+                        star_count_table.article_summary,
+                        star_count_table.article_category,
+                        (count(*) + star_count + star_count_table.article_read_count) /
+                        pow((TO_DAYS(now()) - TO_DAYS(star_count_table.article_create_time) + 1), 1.5) as hot
+                 from (
+                          select article.article_id,
+                                 article.article_user_id,
+                                 article.article_title,
+                                 article.article_content,
+                                 article.article_create_time,
+                                 article.article_update_time,
+                                 article.article_summary,
+                                 article.article_category,
+                                 article.article_read_count,
+                                 count(*) as star_count
+                          from article
+                                   left join star on article.article_id = star.article_id
+                          group by article.article_id
+                      ) as star_count_table
+                          left join comment on star_count_table.article_id = comment.article_id
+                 group by star_count_table.article_id
+                 order by hot desc
+             ) as hot_table
+                 LEFT JOIN article_tag_ref
+                           ON hot_table.article_id = article_tag_ref.article_id
+                 LEFT JOIN tag
+                           ON article_tag_ref.tag_id = tag.tag_id
+                 LEFT JOIN USER
+                           ON user_id = article_user_id
+    </select>
+
+    <select id="selectMostStarArticles" resultMap="userArticle">
+        select star_count_table.article_id,
+               star_count_table.article_user_id,
+               star_count_table.article_title,
+               star_count_table.article_content,
+               star_count_table.article_create_time,
+               star_count_table.article_update_time,
+               star_count_table.article_summary,
+               star_count_table.article_category,
+               star_count_table.article_read_count,
+               star_count,
+               tag.tag_name,
+               user.user_avatar,
+               user.user_nickname,
+               user.user_name
+        from (
+                 select article.article_id,
+                        article.article_user_id,
+                        article.article_title,
+                        article.article_content,
+                        article.article_create_time,
+                        article.article_update_time,
+                        article.article_summary,
+                        article.article_category,
+                        article.article_read_count,
+                        count(*) as star_count
+                 from article
+                          left join star on article.article_id = star.article_id
+                 group by article.article_id
+                 order by star_count desc
+             ) as star_count_table
+                 LEFT JOIN article_tag_ref
+                           ON star_count_table.article_id = article_tag_ref.article_id
+                 LEFT JOIN tag
+                           ON article_tag_ref.tag_id = tag.tag_id
+                 LEFT JOIN USER
+                           ON user_id = article_user_id
+    </select>
+
+    <select id="selectMostCommentArticles" resultMap="userArticle">
+        select star_count_table.article_id,
+               star_count_table.article_user_id,
+               star_count_table.article_title,
+               star_count_table.article_content,
+               star_count_table.article_create_time,
+               star_count_table.article_update_time,
+               star_count_table.article_summary,
+               star_count_table.article_category,
+               star_count_table.article_read_count,
+               comment_count,
+               tag.tag_name,
+               user.user_avatar,
+               user.user_nickname,
+               user.user_name
+        from (
+                 select article.article_id,
+                        article.article_user_id,
+                        article.article_title,
+                        article.article_content,
+                        article.article_create_time,
+                        article.article_update_time,
+                        article.article_summary,
+                        article.article_category,
+                        article.article_read_count,
+                        count(*) as comment_count
+                 from article
+                          left join comment on article.article_id = comment.article_id
+                 group by article.article_id
+                 order by comment_count desc
+             ) as star_count_table
+                 LEFT JOIN article_tag_ref
+                           ON star_count_table.article_id = article_tag_ref.article_id
+                 LEFT JOIN tag
+                           ON article_tag_ref.tag_id = tag.tag_id
+                 LEFT JOIN USER
+                           ON user_id = article_user_id
+    </select>
+
+    <select id="selectMostReadArticles" resultMap="userArticle">
+        select *,
+               tag_name,
+               user_avatar,
+               user_nickname,
+               user_name
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+                 left join user on user_id = article_user_id
+        order by article_read_count
+    </select>
+
+    <resultMap id="popularArticles" type="Article">
+        <id property="articleId" column="article_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleCreateTime" column="article_create_time"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCategory" column="article_category"/>
+        <result property="userAvatar" column="user_avatar"/>
+        <result property="userNickname" column="user_nickname"/>
+
+        <collection property="articleTags" ofType="Tag" javaType="java.util.List">
+            <result property="tagName" column="tag_name"/>
+        </collection>
+    </resultMap>
+
+    <select id="selectArticleByArticleId" resultMap="userArticle">
+        select *, tag_name, user_avatar, user_nickname, user_name
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+                 left join user on user_id = article_user_id
+        where article.article_id = #{articleId}
+    </select>
+
+    <resultMap id="userArticle" type="Article">
+        <id property="articleId" column="article_id"/>
+        <result property="articleUserId" column="article_user_id"/>
+        <result property="articleTitle" column="article_title"/>
+        <result property="articleCreateTime" column="article_create_time"/>
+        <result property="articleSummary" column="article_summary"/>
+        <result property="articleCategory" column="article_category"/>
+        <result property="userAvatar" column="user_avatar"/>
+        <result property="userNickname" column="user_nickname"/>
+        <result property="articleContent" column="article_content"/>
+        <result property="username" column="user_name"/>
+
+        <collection property="articleTags" ofType="Tag" javaType="java.util.List">
+            <result property="tagName" column="tag_name"/>
+            <result property="tagId" column="tag_id"/>
+        </collection>
+    </resultMap>
+
+    <update id="addArticleCountByArticleId">
+        UPDATE article
+        SET article_read_count = article_read_count + 1
+        WHERE article_id = #{articleId}
+    </update>
+
+    <select id="selectArticleByUserIdAndCategory" resultMap="userArticle">
+        select *, tag_name, user_avatar, user_nickname, user_name
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+                 left join user on user_id = article_user_id
+        where article.article_user_id = #{userId}
+          and article_category = #{category}
+    </select>
+
+    <select id="selectArticleByUserIdAndTags" resultMap="userArticle">
+        select
+        *, tag_name, user_avatar, user_nickname,user_name
+        from
+        article as A
+        left join article_tag_ref
+        on A.article_id = article_tag_ref.article_id
+        left join tag
+        on article_tag_ref.tag_id = tag.tag_id
+        left join user
+        on user_id = A.article_user_id
+        where A.article_user_id = #{userId} and A.`article_id` in
+        (select
+        B.article_id
+        from
+        article as B
+        left join article_tag_ref
+        on B.article_id = article_tag_ref.article_id
+        left join tag
+        on article_tag_ref.tag_id = tag.tag_id
+        where tag.tag_id in
+        <foreach collection="tags" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+    <select id="selectArticleByTags" resultMap="userArticle">
+        select
+        *, tag_name, user_avatar, user_nickname,user_name
+        from
+        article as A
+        left join article_tag_ref
+        on A.article_id = article_tag_ref.article_id
+        left join tag
+        on article_tag_ref.tag_id = tag.tag_id
+        left join user
+        on user_id = A.article_user_id
+        where A.`article_id` in
+        (select
+        B.article_id
+        from
+        article as B
+        left join article_tag_ref
+        on B.article_id = article_tag_ref.article_id
+        left join tag
+        on article_tag_ref.tag_id = tag.tag_id
+        where tag.tag_id in
+        <foreach collection="tags" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        )
+    </select>
+
+    <select id="selectArticleByCategory" resultMap="userArticle">
+        select *, tag_name, user_avatar, user_nickname, user_name
+        from `wind-log`.article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+                 left join user on user_id = article_user_id
+        where article_category = #{category}
+    </select>
+
+    <select id="selectArticleBySearch" resultMap="userArticle" parameterType="Search">
+        select *, tag_name, user_avatar, user_nickname, user_name
+        from `wind-log`.article
+        left join article_tag_ref atr on article.article_id = atr.article_id
+        left join tag t on atr.tag_id = t.tag_id
+        left join user on user_id = article_user_id
+        <where>
+            <if test="author != null">
+                user_nickname =#{author}
+            </if>
+            <if test="category != null">
+                and article_category = #{category}
+            </if>
+            <if test="tag != null">
+                and tag_name in (#{tag})
+            </if>
+            <if test="startTime != null">
+                and date(article_create_time) &gt; #{startTime}
+            </if>
+            <if test="endTime != null">
+                and date(article_create_time) &lt; #{endTime}
+            </if>
+            <if test="content != ''">
+                and article_summary like '%${content}%' or article_content like '%${content}%'
+            </if>
+        </where>
+    </select>
+
+    <update id="updateArticle" parameterType="Article">
+        update article
+        set article_title=#{articleTitle},
+            article_category=#{articleCategory},
+            article_summary=#{articleSummary},
+            article_content=#{articleContent},
+            article_update_time=#{articleUpdateTime}
+        where article_id = #{articleId}
+    </update>
+
+    <select id="getStarBlogs" resultMap="userArticle">
+        SELECT article.article_id,
+               article.article_user_id,
+               article.article_title,
+               article.article_content,
+               article.article_create_time,
+               article.article_update_time,
+               article.article_summary,
+               article.article_category,
+               user.user_avatar,
+               user.user_name,
+               user.user_nickname
+        FROM star
+                 LEFT JOIN article ON star.article_id = article.article_id
+                 LEFT JOIN article_tag_ref ON article.article_id = article_tag_ref.article_id
+                 LEFT JOIN tag ON article_tag_ref.tag_id = tag.tag_id
+                 left join user on article.article_user_id = user.user_id
+        WHERE star.user_id = #{userId}
+          AND article.article_id IS NOT NULL
+    </select>
+
+    <select id="getCategoryArticleToStar" resultMap="userArticle">
+        SELECT article.article_id,
+               article.article_user_id,
+               article.article_title,
+               article.article_content,
+               article.article_create_time,
+               article.article_update_time,
+               article.article_summary,
+               article.article_category,
+               user.user_avatar,
+               user.user_name,
+               user.user_nickname
+        FROM star
+                 LEFT JOIN article ON star.article_id = article.article_id
+                 LEFT JOIN article_tag_ref ON article.article_id = article_tag_ref.article_id
+                 LEFT JOIN tag ON article_tag_ref.tag_id = tag.tag_id
+                 left join user on article.article_user_id = user.user_id
+        WHERE star.user_id = #{userId}
+          AND article.article_id IS NOT NULL
+          and star.star_category = #{category}
+    </select>
+
+</mapper>

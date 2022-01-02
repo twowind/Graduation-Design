@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.UserMapper">
+
+    <select id="selectUserByUser" parameterType="User" resultType="User">
+        select user_id,
+               user_name,
+               user_nickname,
+               user_email,
+               user_avatar,
+               user_register_time,
+               user_bio,
+               user_github,
+               user_location,
+               user_weibo
+        from user
+
+        where user_name = #{userName}
+          and user_pass = #{userPass}
+    </select>
+
+    <insert id="insertUserByUser" parameterType="User">
+        insert ignore into user(user_name, user_pass, user_nickname, user_avatar, user_email)
+        values (#{userName}, #{userPass}, #{userNickname}, #{userAvatar}, #{userEmail})
+    </insert>
+
+    <update id="modUserProfile" parameterType="User">
+        update user
+        set user_avatar=#{userAvatar},
+            user_nickname=#{userNickname},
+            user_bio=#{userBio},
+            user_github=#{userGithub},
+            user_weibo=#{userWeibo},
+            user_location=#{userLocation}
+        where (user_id = #{userId})
+    </update>
+
+    <update id="modUserAccount" parameterType="Account">
+        update user
+        <set>
+            <if test="userNewPass!=null">
+                user_pass=#{userNewPass},
+            </if>
+            <if test="userEmail!=null">
+                user_email=#{userEmail}
+            </if>
+        </set>
+        where user_id = #{userId} and user_pass=#{userOldPass}
+    </update>
+
+    <select id="selectUserByUsername" resultType="User">
+        select user.user_id,
+               user_name,
+               user_nickname,
+               user_email,
+               user_avatar,
+               user_register_time,
+               user_bio,
+               user_github,
+               user_location,
+               user_weibo
+        from user
+        where user_name = #{username}
+    </select>
+
+    <select id="selectPopularUser" resultType="User">
+        select user_id,
+               user_name,
+               user_pass,
+               user_nickname,
+               user_email,
+               user_avatar,
+               user_register_time,
+               user_bio,
+               user_github,
+               user_location,
+               user_weibo,
+               followed_count,
+               count(*) as follow_count
+        from (
+                 select user_id,
+                        user_name,
+                        user_pass,
+                        user_nickname,
+                        user_email,
+                        user_avatar,
+                        user_register_time,
+                        user_bio,
+                        user_github,
+                        user_location,
+                        user_weibo,
+                        count(*) as followed_count
+                 from user
+                          left join follow as follow_a on follow_a.followed_id = user.user_id
+                 group by user.user_id
+             ) as follow_count_table
+                 left join follow as follow_b on follow_count_table.user_id = follow_b.follow_id
+        group by follow_count_table.user_id
+        order by followed_count desc
+        limit 10
+    </select>
+
+    <select id="getFollowers" resultType="User">
+        select user_id,
+               user_name,
+               user_nickname,
+               user_email,
+               user_avatar,
+               user_register_time,
+               user_bio,
+               user_github,
+               user_location,
+               user_weibo
+        from user
+                 left join follow on user.user_id = follow.follow_id
+        where follow.followed_id = #{userId}
+    </select>
+
+    <select id="getFolloweds" resultType="User">
+        select user_id,
+               user_name,
+               user_nickname,
+               user_email,
+               user_avatar,
+               user_register_time,
+               user_bio,
+               user_github,
+               user_location,
+               user_weibo
+        from user
+                 left join follow on user.user_id = follow.followed_id
+        where follow.follow_id = #{userId}
+    </select>
+
+</mapper>

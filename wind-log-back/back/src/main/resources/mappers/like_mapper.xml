@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.LikeMapper">
+    <insert id="insertLike" parameterType="Like">
+        insert ignore into `like`(like_user_id, liked_article_id, like_create_time) VALUE (#{likeUserId}, #{LikedArticleId}, #{likeCreateTime})
+    </insert>
+
+</mapper>

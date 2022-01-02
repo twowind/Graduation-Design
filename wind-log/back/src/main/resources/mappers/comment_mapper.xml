@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.CommentMapper">
+
+    <insert id="insertComment" parameterType="Comment" useGeneratedKeys="true" keyProperty="commentId">
+        insert into `wind-log`.comment(`wind-log`.comment.comment_pid,
+                                       `wind-log`.comment.article_id, `wind-log`.comment.article_comment,
+                                       `wind-log`.comment.comment_user_id,
+                                       `wind-log`.comment.comment_time) value (#{commentPid}, #{articleId},
+                                                                               #{articleComment}, #{commentUserId},
+                                                                               #{commentTime})
+    </insert>
+
+    <select id="selectCommentByArticleId" resultType="Comment">
+        SELECT comment_a.comment_id,
+               comment_a.comment_pid,
+               comment_a.article_id,
+               comment_a.article_comment,
+               comment_a.comment_user_id,
+               comment_a.comment_time,
+               user_a.user_nickname ,
+               user_a.user_avatar   ,
+               user_b.user_nickname AS pUserNickname
+        FROM `wind-log`.comment AS comment_a
+                 LEFT JOIN `wind-log`.comment AS comment_b ON comment_a.comment_pid = comment_b.comment_id
+                 LEFT JOIN `wind-log`.user AS user_a ON user_a.user_id = comment_a.comment_user_id
+                 LEFT JOIN `wind-log`.user AS user_b ON user_b.user_id = comment_b.comment_user_id
+        WHERE comment_a.article_id = #{articleId}
+    </select>
+
+    <delete id="deleteComment">
+        delete
+        from comment
+        where comment_id = #{commentId}
+    </delete>
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.MessageMapper">
+
+    <insert id="insertMessage" parameterType="Message" useGeneratedKeys="true" keyProperty="messageId">
+        insert into message(messager_id, messaged_id, message_content)
+            value (#{messagerId}, #{messagedId}, #{messageContent})
+    </insert>
+
+    <select id="selectMessageByUserId" resultType="Message">
+        select message_id,
+               messager_id,
+               messaged_id,
+               message_state,
+               message_content,
+               message_time,
+               user_nickname,
+               user_avatar
+        from `wind-log`.message
+                 left join `wind-log`.user on messager_id = user_id
+        where messaged_id = #{userId}
+    </select>
+
+
+</mapper>

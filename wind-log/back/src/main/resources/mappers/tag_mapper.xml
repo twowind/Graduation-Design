@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlog.mapper.TagMapper">
+
+    <insert id="insertTag" useGeneratedKeys="true"
+            keyProperty="tagId">
+        insert ignore into tag(tag_name) values
+        <foreach item="item" collection="list" separator=",">
+            (#{item.tagName})
+        </foreach>
+    </insert>
+
+    <select id="selectTagsByUserId" resultType="Tag">
+        select distinct tag.`tag_name`,
+               tag.`tag_id`
+        from article
+                 left join article_tag_ref
+                           on article.`article_id` = article_tag_ref.`article_id`
+                 left join tag
+                           on article_tag_ref.`tag_id` = tag.`tag_id`
+        where article.`article_user_id` = #{userId} and tag.tag_id is not null
+    </select>
+
+    <select id="selectPopularTags" resultType="Tag">
+        select tag_name, atr.tag_id, count(*) as counts
+        from article
+                 left join article_tag_ref atr on article.article_id = atr.article_id
+                 left join tag t on atr.tag_id = t.tag_id
+        group by atr.tag_id
+        having atr.tag_id is not null
+        order by counts desc
+        limit 10
+    </select>
+
+    <select id="selectTagIdByTagName" resultType="java.lang.Integer" parameterType="java.lang.String">
+        select tag_id from `wind-log`.tag where tag_name=#{tagName}
+    </select>
+
+</mapper>

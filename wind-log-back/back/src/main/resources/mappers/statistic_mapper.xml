@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zs.windlogback.mapper.StatisticMapper">
+    <select id="selectNowVisits" resultType="java.lang.Integer">
+        select count(*)
+        from user
+        where DATE_FORMAT(user_register_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m');
+    </select>
+
+    <select id="selectNowComments" resultType="java.lang.Integer">
+        select count(*)
+        from comment
+        where DATE_FORMAT(comment_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m');
+    </select>
+
+    <select id="selectNowMessage" resultType="java.lang.Integer">
+        select count(*)
+        from message
+        where DATE_FORMAT(message_time, '%Y%m') = DATE_FORMAT(CURDATE(), '%Y%m');
+    </select>
+
+    <select id="selectAllUsers" resultType="java.lang.Integer">
+        select count(*)
+        from user;
+    </select>
+
+    <select id="selectAllArticles" resultType="java.lang.Integer">
+        select count(*)
+        from article;
+    </select>
+
+    <select id="selectAllComments" resultType="java.lang.Integer">
+        select count(*)
+        from comment;
+    </select>
+
+    <select id="selectTimeArticle" resultType="map">
+        select DATE_FORMAT(article_create_time, '%Y-%m') as articleCreateTime, count(*) as count
+        from article
+        group by articleCreateTime
+        order by articleCreateTime desc
+    </select>
+
+</mapper>
